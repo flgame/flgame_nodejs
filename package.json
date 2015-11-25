@@ -1,0 +1,12 @@
+{
+	"name": "egret",
+	"version": "2.5.4",
+	"modules": [
+		{
+			"name": "flgame_nodejs",
+			"description": "flgame for nodejs",
+			"files": [],
+			"root": "src"
+		}
+	]
+}
