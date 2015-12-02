@@ -1,3 +1,4 @@
+/// <reference path="./InjectionResult.ts" />
 module fl {
 	export class InjectClassResult extends fl.InjectionResult {
 

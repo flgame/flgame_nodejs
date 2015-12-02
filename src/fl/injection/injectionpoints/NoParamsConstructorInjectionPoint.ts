@@ -1,3 +1,4 @@
+/// <reference path="./InjectionPoint.ts" />
 module fl {
 	export class NoParamsConstructorInjectionPoint extends fl.InjectionPoint {
 

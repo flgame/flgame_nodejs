@@ -1,5 +1,4 @@
 module fl {
-	export var injector:Injector = Injector.getInstance();
 	export class Injector implements fl.IInjector {
 
 		public static instance_:Injector;
@@ -194,8 +193,9 @@ module fl {
 		}
 
 	}
+	export var injector:Injector = Injector.getInstance();
 
-	 class InjecteeDescription {
+	class InjecteeDescription {
 
 		public ctor:fl.InjectionPoint;
 		public injectionPoints:Array<any>;

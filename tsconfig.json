@@ -6,7 +6,8 @@
         "outFile": "bin/flgame_nodejs.js",
         "rootDir": "src",
         "sourceMap": true,
-        "declaration": true
+        "declaration": true,
+        "listFiles": true
     },
      "exclude": [
         "bin"

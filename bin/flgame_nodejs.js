@@ -597,28 +597,6 @@ var fl;
 })(fl || (fl = {}));
 var fl;
 (function (fl) {
-    var Actions = (function () {
-        function Actions() {
-        }
-        Actions.init = function () {
-            if (fl.Actions.inited)
-                return;
-            fl.Actions.inited = true;
-            //inject actions
-        };
-        Actions.injectAction = function (actionClass) {
-            fl.actionMgr.injectAction(actionClass);
-        };
-        Actions.uninjectAction = function (actionClass) {
-            fl.actionMgr.uninjectAction(actionClass);
-        };
-        Actions.inited = false;
-        return Actions;
-    })();
-    fl.Actions = Actions;
-})(fl || (fl = {}));
-var fl;
-(function (fl) {
     var BaseAction = (function () {
         function BaseAction() {
             this.eventMgr = fl.eventMgr;
@@ -867,21 +845,6 @@ var fl;
 })(fl || (fl = {}));
 var fl;
 (function (fl) {
-    var GameNet = (function (_super) {
-        __extends(GameNet, _super);
-        function GameNet(socket) {
-            _super.call(this, socket);
-            this.cachCmd(true);
-        }
-        GameNet.prototype.noCachCmd = function (p) {
-            return false;
-        };
-        return GameNet;
-    })(fl.BaseNet);
-    fl.GameNet = GameNet;
-})(fl || (fl = {}));
-var fl;
-(function (fl) {
     var NetManager = (function () {
         function NetManager() {
             this.netCache_ = new fl.Dictionary();
@@ -1009,7 +972,6 @@ fl.InjectionType.CLASS = 1;
 fl.InjectionType.SINGLETON = 2;
 var fl;
 (function (fl) {
-    fl.injector = Injector.getInstance();
     var Injector = (function () {
         function Injector() {
             this.m_mappings = new fl.Dictionary();
@@ -1158,6 +1120,7 @@ var fl;
         return Injector;
     })();
     fl.Injector = Injector;
+    fl.injector = Injector.getInstance();
     var InjecteeDescription = (function () {
         function InjecteeDescription(ctor, injectionPoints) {
             this.ctor = ctor;
@@ -1193,6 +1156,7 @@ var fl;
     })();
     fl.InjectionPoint = InjectionPoint;
 })(fl || (fl = {}));
+/// <reference path="./InjectionPoint.ts" />
 var fl;
 (function (fl) {
     var NoParamsConstructorInjectionPoint = (function (_super) {
@@ -1209,6 +1173,19 @@ var fl;
 })(fl || (fl = {}));
 var fl;
 (function (fl) {
+    var InjectionResult = (function () {
+        function InjectionResult() {
+        }
+        InjectionResult.prototype.getResponse = function (injector) {
+            return null;
+        };
+        return InjectionResult;
+    })();
+    fl.InjectionResult = InjectionResult;
+})(fl || (fl = {}));
+/// <reference path="./InjectionResult.ts" />
+var fl;
+(function (fl) {
     var InjectClassResult = (function (_super) {
         __extends(InjectClassResult, _super);
         function InjectClassResult(responseType) {
@@ -1222,6 +1199,7 @@ var fl;
     })(fl.InjectionResult);
     fl.InjectClassResult = InjectClassResult;
 })(fl || (fl = {}));
+/// <reference path="./InjectionResult.ts" />
 var fl;
 (function (fl) {
     var InjectOtherRuleResult = (function (_super) {
@@ -1237,6 +1215,7 @@ var fl;
     })(fl.InjectionResult);
     fl.InjectOtherRuleResult = InjectOtherRuleResult;
 })(fl || (fl = {}));
+/// <reference path="./InjectionResult.ts" />
 var fl;
 (function (fl) {
     var InjectSingletonResult = (function (_super) {
@@ -1255,6 +1234,7 @@ var fl;
     })(fl.InjectionResult);
     fl.InjectSingletonResult = InjectSingletonResult;
 })(fl || (fl = {}));
+/// <reference path="./InjectionResult.ts" />
 var fl;
 (function (fl) {
     var InjectValueResult = (function (_super) {
@@ -1269,17 +1249,5 @@ var fl;
         return InjectValueResult;
     })(fl.InjectionResult);
     fl.InjectValueResult = InjectValueResult;
-})(fl || (fl = {}));
-var fl;
-(function (fl) {
-    var InjectionResult = (function () {
-        function InjectionResult() {
-        }
-        InjectionResult.prototype.getResponse = function (injector) {
-            return null;
-        };
-        return InjectionResult;
-    })();
-    fl.InjectionResult = InjectionResult;
 })(fl || (fl = {}));
 //# sourceMappingURL=flgame_nodejs.js.map

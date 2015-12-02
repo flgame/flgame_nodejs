@@ -97,14 +97,6 @@ declare module fl {
     var actionMgr: fl.ActionManager;
 }
 declare module fl {
-    class Actions {
-        static inited: boolean;
-        static init(): void;
-        static injectAction(actionClass: any): void;
-        static uninjectAction(actionClass: any): void;
-    }
-}
-declare module fl {
     class BaseAction {
         eventMgr: fl.EventManager;
         netMgr: fl.NetManager;
@@ -167,12 +159,6 @@ declare module fl {
     }
 }
 declare module fl {
-    class GameNet extends fl.BaseNet {
-        constructor(socket: SocketIO.Socket);
-        protected noCachCmd(p: number): boolean;
-    }
-}
-declare module fl {
     class NetManager {
         static instance_: fl.NetManager;
         static getInstance(): fl.NetManager;
@@ -231,7 +217,6 @@ declare module fl {
     }
 }
 declare module fl {
-    var injector: Injector;
     class Injector implements fl.IInjector {
         static instance_: Injector;
         static getInstance(): Injector;
@@ -261,6 +246,7 @@ declare module fl {
         private getInjectionPoints(clazz);
         private getConfigurationForRequest(clazz, named, traverseAncestors?);
     }
+    var injector: Injector;
 }
 declare module fl {
     class InjectorError extends Error {
@@ -277,6 +263,12 @@ declare module fl {
     class NoParamsConstructorInjectionPoint extends fl.InjectionPoint {
         constructor();
         applyInjection(target: any, injector: fl.Injector): any;
+    }
+}
+declare module fl {
+    class InjectionResult {
+        constructor();
+        getResponse(injector: fl.Injector): any;
     }
 }
 declare module fl {
@@ -306,12 +298,6 @@ declare module fl {
     class InjectValueResult extends fl.InjectionResult {
         private m_value;
         constructor(value: any);
-        getResponse(injector: fl.Injector): any;
-    }
-}
-declare module fl {
-    class InjectionResult {
-        constructor();
         getResponse(injector: fl.Injector): any;
     }
 }
