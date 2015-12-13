@@ -1,0 +1,26 @@
+[ERR!] cwd  : E:\libs\flgame_nodejs
+[ERR!] os   : Windows_NT 6.3.9600
+[ERR!] argv : "C:\\Program Files\\nodejs\\node.exe" "C:\\Users\\feir\\AppData\\Roaming\\npm\\node_modules\\tsd\\build\\cli.js" "install" "bytebuffer" "--save"
+[ERR!] node : v4.1.2
+[ERR!] tsd  : 0.6.5
+[ERR!] Error: getaddrinfo ENOTFOUND api.github.com api.github.com:443
+[ERR!] CODE : ENOTFOUND
+[ERR!] getaddrinfo ENOTFOUND api.github.com api.github.com:443
+This is most likely not a problem with tsd itself
+and is related to network connectivity.
+In most cases you are behind a proxy or have bad network settings.
+
+If you are behind a proxy, please make sure that the
+'proxy' config is set properly.  See: https://github.com/DefinitelyTyped/tsd#tsdrc
+[ERR!] 
+Error: getaddrinfo ENOTFOUND api.github.com api.github.com:443
+    at errnoException (dns.js:26:10)
+    at GetAddrInfoReqWrap.onlookup [as oncomplete] (dns.js:77:26)
+
+[ERR!] tsd.json: {"version":"v4","repo":"borisyankov/DefinitelyTyped","ref":"master","path":"libs","bundle":"src/tsd.d.ts","installed":{"mime/mime.d.ts":{"commit":"b2d17b5dad042e293e77d09f2a30d281325cb606"},"node/node.d.ts":{"commit":"923c5431d9447db9d5cf41adc5914e3c94c1ff10"},"serve-static/serve-static.d.ts":{"commit":"b2d17b5dad042e293e77d09f2a30d281325cb606"},"express/express.d.ts":{"commit":"b2d17b5dad042e293e77d09f2a30d281325cb606"},"socket.io/socket.io.d.ts":{"commit":"b2d17b5dad042e293e77d09f2a30d281325cb606"},"log4js/log4js.d.ts":{"commit":"b2d17b5dad042e293e77d09f2a30d281325cb606"},"ws/ws.d.ts":{"commit":"923c5431d9447db9d5cf41adc5914e3c94c1ff10"}}}
+
+[ERR!] .tsdrc could not be retrieved
+
+[ERR!] Please include the following file with any support request:
+    E:\libs\flgame_nodejs\tsd-debug.log
+

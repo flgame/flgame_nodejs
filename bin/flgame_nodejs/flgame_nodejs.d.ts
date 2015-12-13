@@ -79,32 +79,30 @@ declare module fl {
 }
 declare module fl {
     class ActionManager {
-        private actionCache_;
-        static instance_: fl.ActionManager;
-        static getInstance(): fl.ActionManager;
-        private injector_;
-        initActions(injector?: fl.IInjector): void;
-        private actionClazz_;
-        injectAction(actionClass: any): void;
-        uninjectAction(actionClass: any): void;
-        mapAction(action: fl.BaseAction): void;
-        unmapAction(action: fl.BaseAction): void;
+        private static actionCache_;
+        private static actionClazz_;
+        static injectAction(actionClass: any): void;
+        static uninjectAction(actionClass: any): void;
+        static mapAction(action: any): void;
+        static unmapAction(action: any): void;
+        static getAction(id: any): any;
+        static setAction(action: any, id: any): any;
+        static removeAction(id: any): any;
+        injector_: IInjector;
+        net: BaseNet;
+        constructor(net: BaseNet, injector?: IInjector);
         getActionByClass(actionClass: any): fl.BaseAction;
         getAction(id: any): fl.BaseAction;
-        setAction(action: fl.BaseAction, id: any): fl.BaseAction;
-        removeAction(id: any): fl.BaseAction;
     }
-    var actionMgr: fl.ActionManager;
 }
 declare module fl {
     class BaseAction {
         eventMgr: fl.EventManager;
         netMgr: fl.NetManager;
-        protected mapProtocols: Array<any>;
-        protocols: Array<any>;
-        process(data: egret.ByteArray, protocol?: number): void;
+        netId: string;
+        process(data: ByteBuffer, protocol?: number): void;
         sendPack(pack: fl.BasePack, netId?: string): void;
-        sendBytes(bytes: egret.ByteArray, netId?: string): void;
+        sendBytes(bytes: ByteBuffer, netId?: string): void;
         dispatchEvent(e: fl.GlobalEvent): void;
     }
 }
@@ -112,31 +110,36 @@ declare module fl {
     class BaseNet {
         static EVENT_NET_ERR: string;
         static EVENT_CLIENT_CLOSE: string;
+        static ID: number;
+        static generateID(): string;
+        url: string;
         ip: string;
         port: number;
         id: string;
+        socket: ws.WebSocket;
+        actionMgr: fl.ActionManager;
         private dataCache_;
-        socket: SocketIO.Socket;
         protected _cachCmd: boolean;
         protected _cachQueue: Array<any>;
         private _receBytes;
-        constructor(socket: SocketIO.Socket);
+        constructor(socket: ws.WebSocket);
         close(): void;
         forceClose(): void;
         protected onConnect(): void;
         protected notifyClose(): void;
-        protected onClose(): void;
-        send(bytes: egret.ByteArray): void;
-        protected onReceived(data: ArrayBuffer): void;
+        protected onClose(code: number, message: string): void;
+        protected onError(error: Error): void;
+        send(bytes: ByteBuffer): void;
+        protected onReceived(data: ArrayBuffer, flags?: any): void;
         private processPacks();
         /**
          * decrypt the data if need
          **/
-        protected decryption(bytes: egret.ByteArray): egret.ByteArray;
+        protected decryption(bytes: ByteBuffer): ByteBuffer;
         cachCmd(b: boolean): void;
         protected noCachCmd(p: number): boolean;
-        protected processOrCache(protocol: number, data: egret.ByteArray): void;
-        protected processCmd(protocol: number, data: egret.ByteArray): void;
+        protected processOrCache(protocol: number, data: ByteBuffer): void;
+        protected processCmd(protocol: number, data: ByteBuffer): void;
     }
 }
 declare module fl {
@@ -144,31 +147,37 @@ declare module fl {
         static EVENT_PACK_ERR: string;
         static HEAD_SIZE: number;
         static MAX_PACK_SIZE: number;
+        static BUFFER_SIZE: number;
         id: number;
         size: number;
         result: number;
+        protoModel: any;
+        protoValue: any;
         constructor(id: number);
-        getBytes(): egret.ByteArray;
-        protected toBytes(bytes: egret.ByteArray): void;
-        writeBytes(bytes: egret.ByteArray): void;
-        setBytes(bytes: egret.ByteArray): void;
-        protected fromBytes(bytes: egret.ByteArray): void;
-        readBytes(bytes: egret.ByteArray): void;
-        resetBytesPos(bytes: egret.ByteArray): void;
+        getBytes(): ByteBuffer;
+        protected toBytes(bytes: ByteBuffer): void;
+        writeBytes(bytes: ByteBuffer): void;
+        setBytes(bytes: ByteBuffer): void;
+        protected fromBytes(bytes: ByteBuffer): void;
+        readBytes(bytes: ByteBuffer): void;
+        resetBytesPos(bytes: ByteBuffer): void;
         protected dealError(err: number): void;
+        static readProtoModel(m: any, bytes: ByteBuffer, length?: number): any;
+        static writeProtoModel(v: any, bytes: ByteBuffer): ByteBuffer;
     }
 }
 declare module fl {
     class NetManager {
         static instance_: fl.NetManager;
         static getInstance(): fl.NetManager;
+        constructor();
         private netCache_;
-        addNet(socket: SocketIO.Socket, netClass?: any): fl.BaseNet;
+        addNet(socket: ws.WebSocket, netClass?: any): fl.BaseNet;
         getNet(id: string): fl.BaseNet;
         setNet(net: fl.BaseNet, id: string): fl.BaseNet;
         removeNet(id: string): fl.BaseNet;
         sendPack(pack: fl.BasePack, netId: string): void;
-        sendBytes(bytes: egret.ByteArray, netId: string): void;
+        sendBytes(bytes: ByteBuffer, netId: string): void;
     }
     var netMgr: fl.NetManager;
 }

@@ -1,50 +1,28 @@
 module fl {
 	export class ActionManager {
-
-		private actionCache_:fl.Dictionary = new fl.Dictionary();
-		public static instance_:fl.ActionManager;
-		public static getInstance():fl.ActionManager
+		private static actionCache_:fl.Dictionary = new fl.Dictionary();
+		private static actionClazz_:Array<any> = [];
+		public static injectAction(actionClass:any)
 		{
-            if(null == fl.ActionManager.instance_)
-            {
-                fl.ActionManager.instance_ = new fl.ActionManager();
-            }
-			return fl.ActionManager.instance_;
-		}
-
-		private injector_:fl.IInjector;
-		public initActions(injector:fl.IInjector = null)
-		{
-			this.injector_ = injector || fl.injector;
-			this.injector_.mapValue(fl.ActionManager,this);
-		}
-
-		private actionClazz_:Array<any> = [];
-		public injectAction(actionClass:any)
-		{
-			var tmpI:number = this.actionClazz_.indexOf(actionClass);
-			if(this.injector_ && actionClass && tmpI == -1)
+			var tmpI:number = ActionManager.actionClazz_.indexOf(actionClass);
+			if(actionClass && tmpI == -1)
 			{
-				this.injector_.mapSingleton(actionClass);
-				var action:fl.BaseAction = this.injector_.getInstance(actionClass);
-				this.mapAction(action);
-				this.actionClazz_.push(actionClass);
+				ActionManager.mapAction(actionClass);
+				ActionManager.actionClazz_.push(actionClass);
 			}
 		}
 
-		public uninjectAction(actionClass:any)
+		public static uninjectAction(actionClass:any)
 		{
-			var tmpI:number = this.actionClazz_.indexOf(actionClass);
-			if(this.injector_ && actionClass && tmpI >= 0)
+			var tmpI:number = ActionManager.actionClazz_.indexOf(actionClass);
+			if(actionClass && tmpI >= 0)
 			{
-				var action:fl.BaseAction = this.injector_.getInstance(actionClass);
-				this.unmapAction(action);
-				this.injector_.unmap(actionClass);
-				this.actionClazz_.splice(tmpI,1);
+				ActionManager.unmapAction(actionClass);
+				ActionManager.actionClazz_.splice(tmpI,1);
 			}
 		}
 
-		public mapAction(action:fl.BaseAction)
+		public static mapAction(action:any)
 		{
 			if(action)
 			{
@@ -52,62 +30,75 @@ module fl {
 				{
 					var protocol:any = action.protocols[protocol_key_a];
 					if(protocol != null)
-						this.setAction(action,protocol);
+						ActionManager.setAction(action,protocol);
 				}
 			}
 		}
 
-		public unmapAction(action:fl.BaseAction)
+		public static unmapAction(action:any)
 		{
-			for(var forinvar__ in this.actionCache_.map)
+			for(var forinvar__ in ActionManager.actionCache_.map)
 			{
-				var key = this.actionCache_.map[forinvar__][0];
-				if(this.actionCache_.getItem(key) == action)
+				var key = ActionManager.actionCache_.map[forinvar__][0];
+				if(ActionManager.actionCache_.getItem(key) == action)
 				{
-					this.actionCache_.delItem(key);
+					ActionManager.actionCache_.delItem(key);
 				}
 			}
 		}
+		
+		public static getAction(id:any):any
+		{
+			return ActionManager.actionCache_.getItem(id);
+		}
 
+		public static setAction(action:any,id:any):any
+		{
+			if(ActionManager.actionCache_.getItem(id))
+			{
+				ActionManager.removeAction(id);
+			}
+			ActionManager.actionCache_.setItem(id,action);
+			return action;
+		}
+
+		public static removeAction(id:any):any
+		{
+			var action:any;
+			if(ActionManager.actionCache_.hasOwnProperty(id))
+			{
+				action = ActionManager.actionCache_.getItem(id);
+				ActionManager.actionCache_.delItem(id);
+			}
+			return action;
+		}
+		
+		public injector_:IInjector;
+		public net:BaseNet;
+		public constructor(net:BaseNet, injector?:IInjector) {
+			this.net = net;
+			this.injector_ = injector || new fl.Injector();
+			this.injector_.mapValue(fl.BaseNet,this.net);
+			this.injector_.mapValue(fl.ActionManager,this);
+		}
+		
 		public getActionByClass(actionClass:any):fl.BaseAction
 		{
 			var action:fl.BaseAction;
-			var tmpI:number = this.actionClazz_.indexOf(actionClass);
-			if(this.injector_ && actionClass && tmpI != -1)
+			if(this.injector_ && actionClass)
 			{
+				if(!this.injector_.hasMapping(actionClass)) {
+					this.injector_.mapSingleton(actionClass);
+				}
 				action = this.injector_.getInstance(actionClass);
+				action.netId = this.net.id;
 			}
 			return action;
 		}
 
 		public getAction(id:any):fl.BaseAction
 		{
-			var action:fl.BaseAction = this.actionCache_.getItem(id);
-			return action;
+			return this.getActionByClass(ActionManager.getAction(id));
 		}
-
-		public setAction(action:fl.BaseAction,id:any):fl.BaseAction
-		{
-			if(this.actionCache_.getItem(id))
-			{
-				this.removeAction(id);
-			}
-			this.actionCache_.setItem(id,action);
-			return action;
-		}
-
-		public removeAction(id:any):fl.BaseAction
-		{
-			var action:fl.BaseAction = <any>null;
-			if(this.actionCache_.hasOwnProperty(id))
-			{
-				action = this.actionCache_.getItem(id);
-				this.actionCache_.delItem(id);
-			}
-			return action;
-		}
-
 	}
-
-    export var actionMgr:fl.ActionManager = fl.ActionManager.getInstance();
 }

@@ -10,8 +10,16 @@ module fl {
 			return fl.NetManager.instance_;
 		}
 
+		public constructor()
+		{
+			var __self__:NetManager = this;
+			fl.eventMgr.addEventListener(fl.BaseNet.EVENT_NET_ERR, function(id:string):void {
+				__self__.removeNet(id);
+			});
+		}
+		
 		private netCache_:fl.Dictionary = new fl.Dictionary();
-		public addNet(socket:SocketIO.Socket,netClass:any = null):fl.BaseNet
+		public addNet(socket:ws.WebSocket,netClass:any = null):fl.BaseNet
 		{
 			var net:fl.BaseNet;
 			netClass = netClass || fl.BaseNet;
@@ -53,7 +61,7 @@ module fl {
 			this.sendBytes(pack.getBytes(),netId);
 		}
 
-		public sendBytes(bytes:egret.ByteArray,netId:string)
+		public sendBytes(bytes:ByteBuffer,netId:string)
 		{
 			var net:fl.BaseNet = this.getNet(netId);
 			net.send(bytes);

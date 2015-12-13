@@ -5,3 +5,5 @@ var log4js = require('log4js');
 module fl {
     export var logger = log4js.getLogger("flgame");
 }
+
+module.exports = fl;

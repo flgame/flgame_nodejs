@@ -8,7 +8,7 @@ module fl {
 			return Injector.instance_;
 		}
 
-		public static INJECTION_POINTS_CACHE:fl.Dictionary;
+		public static INJECTION_POINTS_CACHE:fl.Dictionary = new fl.Dictionary(true);
 		private m_parentInjector:fl.Injector;
 		private m_mappings:fl.Dictionary;
 		private m_injecteeDescriptions:fl.Dictionary;
@@ -208,5 +208,3 @@ module fl {
 
 	}
 }
-
-fl.Injector.INJECTION_POINTS_CACHE = new fl.Dictionary(true);

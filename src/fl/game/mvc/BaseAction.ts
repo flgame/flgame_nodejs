@@ -3,29 +3,19 @@ module fl {
 
 		public eventMgr:fl.EventManager = fl.eventMgr;
 		public netMgr:fl.NetManager = fl.netMgr;
-		protected mapProtocols:Array<any>;
-		public get protocols():Array<any>
-		{
-			return this.mapProtocols;
-		}
-
-		public set protocols(value:Array<any>)
-		{
-			this.mapProtocols = value;
-		}
-
-		public process(data:egret.ByteArray,protocol:number = 0)
+		public netId:string;
+		public process(data:ByteBuffer,protocol:number = 0)
 		{
 		}
 
 		public sendPack(pack:fl.BasePack,netId:string = "")
 		{
-			this.netMgr.sendPack(pack,netId);
+			this.netMgr.sendPack(pack,netId || this.netId);
 		}
 
-		public sendBytes(bytes:egret.ByteArray,netId:string = "")
+		public sendBytes(bytes:ByteBuffer,netId:string = "")
 		{
-			this.netMgr.sendBytes(bytes,netId);
+			this.netMgr.sendBytes(bytes,netId || this.netId);
 		}
 
 		public dispatchEvent(e:fl.GlobalEvent)

@@ -6,6 +6,7 @@ var fl;
 (function (fl) {
     fl.logger = log4js.getLogger("flgame");
 })(fl || (fl = {}));
+module.exports = fl;
 /**
  * Created by feir on 2015/11/14.
  */
@@ -513,87 +514,80 @@ var fl;
 var fl;
 (function (fl) {
     var ActionManager = (function () {
-        function ActionManager() {
-            this.actionCache_ = new fl.Dictionary();
-            this.actionClazz_ = [];
-        }
-        ActionManager.getInstance = function () {
-            if (null == fl.ActionManager.instance_) {
-                fl.ActionManager.instance_ = new fl.ActionManager();
-            }
-            return fl.ActionManager.instance_;
-        };
-        ActionManager.prototype.initActions = function (injector) {
-            if (injector === void 0) { injector = null; }
-            this.injector_ = injector || fl.injector;
+        function ActionManager(net, injector) {
+            this.net = net;
+            this.injector_ = injector || new fl.Injector();
+            this.injector_.mapValue(fl.BaseNet, this.net);
             this.injector_.mapValue(fl.ActionManager, this);
-        };
-        ActionManager.prototype.injectAction = function (actionClass) {
-            var tmpI = this.actionClazz_.indexOf(actionClass);
-            if (this.injector_ && actionClass && tmpI == -1) {
-                this.injector_.mapSingleton(actionClass);
-                var action = this.injector_.getInstance(actionClass);
-                this.mapAction(action);
-                this.actionClazz_.push(actionClass);
+        }
+        ActionManager.injectAction = function (actionClass) {
+            var tmpI = ActionManager.actionClazz_.indexOf(actionClass);
+            if (actionClass && tmpI == -1) {
+                ActionManager.mapAction(actionClass);
+                ActionManager.actionClazz_.push(actionClass);
             }
         };
-        ActionManager.prototype.uninjectAction = function (actionClass) {
-            var tmpI = this.actionClazz_.indexOf(actionClass);
-            if (this.injector_ && actionClass && tmpI >= 0) {
-                var action = this.injector_.getInstance(actionClass);
-                this.unmapAction(action);
-                this.injector_.unmap(actionClass);
-                this.actionClazz_.splice(tmpI, 1);
+        ActionManager.uninjectAction = function (actionClass) {
+            var tmpI = ActionManager.actionClazz_.indexOf(actionClass);
+            if (actionClass && tmpI >= 0) {
+                ActionManager.unmapAction(actionClass);
+                ActionManager.actionClazz_.splice(tmpI, 1);
             }
         };
-        ActionManager.prototype.mapAction = function (action) {
+        ActionManager.mapAction = function (action) {
             if (action) {
                 for (var protocol_key_a in action.protocols) {
                     var protocol = action.protocols[protocol_key_a];
                     if (protocol != null)
-                        this.setAction(action, protocol);
+                        ActionManager.setAction(action, protocol);
                 }
             }
         };
-        ActionManager.prototype.unmapAction = function (action) {
-            for (var forinvar__ in this.actionCache_.map) {
-                var key = this.actionCache_.map[forinvar__][0];
-                if (this.actionCache_.getItem(key) == action) {
-                    this.actionCache_.delItem(key);
+        ActionManager.unmapAction = function (action) {
+            for (var forinvar__ in ActionManager.actionCache_.map) {
+                var key = ActionManager.actionCache_.map[forinvar__][0];
+                if (ActionManager.actionCache_.getItem(key) == action) {
+                    ActionManager.actionCache_.delItem(key);
                 }
             }
+        };
+        ActionManager.getAction = function (id) {
+            return ActionManager.actionCache_.getItem(id);
+        };
+        ActionManager.setAction = function (action, id) {
+            if (ActionManager.actionCache_.getItem(id)) {
+                ActionManager.removeAction(id);
+            }
+            ActionManager.actionCache_.setItem(id, action);
+            return action;
+        };
+        ActionManager.removeAction = function (id) {
+            var action;
+            if (ActionManager.actionCache_.hasOwnProperty(id)) {
+                action = ActionManager.actionCache_.getItem(id);
+                ActionManager.actionCache_.delItem(id);
+            }
+            return action;
         };
         ActionManager.prototype.getActionByClass = function (actionClass) {
             var action;
-            var tmpI = this.actionClazz_.indexOf(actionClass);
-            if (this.injector_ && actionClass && tmpI != -1) {
+            if (this.injector_ && actionClass) {
+                if (!this.injector_.hasMapping(actionClass)) {
+                    this.injector_.mapSingleton(actionClass);
+                }
                 action = this.injector_.getInstance(actionClass);
+                action.netId = this.net.id;
             }
             return action;
         };
         ActionManager.prototype.getAction = function (id) {
-            var action = this.actionCache_.getItem(id);
-            return action;
+            return this.getActionByClass(ActionManager.getAction(id));
         };
-        ActionManager.prototype.setAction = function (action, id) {
-            if (this.actionCache_.getItem(id)) {
-                this.removeAction(id);
-            }
-            this.actionCache_.setItem(id, action);
-            return action;
-        };
-        ActionManager.prototype.removeAction = function (id) {
-            var action = null;
-            if (this.actionCache_.hasOwnProperty(id)) {
-                action = this.actionCache_.getItem(id);
-                this.actionCache_.delItem(id);
-            }
-            return action;
-        };
+        ActionManager.actionCache_ = new fl.Dictionary();
+        ActionManager.actionClazz_ = [];
         return ActionManager;
     })();
     fl.ActionManager = ActionManager;
-    fl.actionMgr = fl.ActionManager.getInstance();
 })(fl || (fl = {}));
 var fl;
 (function (fl) {
@@ -602,26 +596,16 @@ var fl;
             this.eventMgr = fl.eventMgr;
             this.netMgr = fl.netMgr;
         }
-        Object.defineProperty(BaseAction.prototype, "protocols", {
-            get: function () {
-                return this.mapProtocols;
-            },
-            set: function (value) {
-                this.mapProtocols = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
         BaseAction.prototype.process = function (data, protocol) {
             if (protocol === void 0) { protocol = 0; }
         };
         BaseAction.prototype.sendPack = function (pack, netId) {
             if (netId === void 0) { netId = ""; }
-            this.netMgr.sendPack(pack, netId);
+            this.netMgr.sendPack(pack, netId || this.netId);
         };
         BaseAction.prototype.sendBytes = function (bytes, netId) {
             if (netId === void 0) { netId = ""; }
-            this.netMgr.sendBytes(bytes, netId);
+            this.netMgr.sendBytes(bytes, netId || this.netId);
         };
         BaseAction.prototype.dispatchEvent = function (e) {
             this.eventMgr.dispatchEvent(e);
@@ -636,25 +620,38 @@ var fl;
         function BaseNet(socket) {
             this.dataCache_ = new Array();
             this._cachCmd = false;
+            var __self__ = this;
             this.socket = socket;
-            this.id = socket.id;
-            this.ip = socket.request.connection.remoteAddress;
-            this.port = socket.request.connection.remotePort;
-            this._receBytes = new egret.ByteArray();
-            fl.logger.info('client connected ' + this.ip + ":" + this.port);
-            this.socket.on("message", this.onReceived);
-            this.socket.on("disconnect", this.onClose);
+            this.actionMgr = new fl.ActionManager(this);
+            this.id = BaseNet.generateID();
+            // this.ip = socket.request.connection.remoteAddress;
+            // this.port = socket.request.connection.remotePort;
+            this._receBytes = new ByteBuffer(fl.BasePack.BUFFER_SIZE).flip();
+            fl.logger.info('client connected ' + this.id + ":" + this.url);
+            this.socket.on("message", function () {
+                __self__.onReceived.apply(__self__, arguments);
+            });
+            this.socket.on("close", function () {
+                __self__.onClose.apply(__self__, arguments);
+            });
+            this.socket.on("error", function () {
+                __self__.onError.apply(__self__, arguments);
+            });
             this.onConnect();
         }
+        BaseNet.generateID = function () {
+            BaseNet.ID++;
+            return BaseNet.ID + "-" + Date.now();
+        };
         BaseNet.prototype.close = function () {
-            if (this.socket.connected) {
-                this.socket.disconnect(true);
+            if (this.socket.readyState == this.socket.CONNECTING || this.socket.readyState == this.socket.OPEN) {
+                this.socket.close();
             }
             this.dataCache_ = new Array();
         };
         BaseNet.prototype.forceClose = function () {
             this.close();
-            fl.eventMgr.dispatchEvent(new fl.GlobalEvent(fl.BaseNet.EVENT_CLIENT_CLOSE));
+            fl.eventMgr.dispatchEvent(new fl.GlobalEvent(fl.BaseNet.EVENT_CLIENT_CLOSE, this.id));
         };
         BaseNet.prototype.onConnect = function () {
             var data = this.dataCache_.shift();
@@ -666,71 +663,78 @@ var fl;
         BaseNet.prototype.notifyClose = function () {
             fl.eventMgr.dispatchEvent(new fl.GlobalEvent(fl.BaseNet.EVENT_NET_ERR, this.id));
         };
-        BaseNet.prototype.onClose = function () {
-            fl.logger.info('client disconnected ' + this.ip + ":" + this.port);
+        BaseNet.prototype.onClose = function (code, message) {
+            fl.logger.info('client disconnected ' + this.id + ":" + this.url + ", code: " + code + ", message: " + message);
+            this.notifyClose();
+        };
+        BaseNet.prototype.onError = function (error) {
+            fl.logger.info('client error ' + this.id + ":" + this.url + ", error: " + error);
             this.notifyClose();
         };
         BaseNet.prototype.send = function (bytes) {
-            if (this.socket.connected) {
-                this.socket.send(bytes.buffer);
+            if (this.socket.readyState == this.socket.OPEN) {
+                this.socket.send(bytes.toArrayBuffer(), { binary: true });
             }
             else {
                 this.dataCache_.push(bytes);
             }
         };
-        BaseNet.prototype.onReceived = function (data) {
-            var tempBytes = new egret.ByteArray(data);
-            if (tempBytes.length == 0) {
+        BaseNet.prototype.onReceived = function (data, flags) {
+            if (data.byteLength == 0) {
                 return;
             }
-            this._receBytes.position = this._receBytes.length;
-            this._receBytes.writeBytes(tempBytes, 0, tempBytes.length);
+            this._receBytes.offset = this._receBytes.limit;
+            this._receBytes.append(data).flip();
             while (this.processPacks())
                 ;
         };
         BaseNet.prototype.processPacks = function () {
-            var _self__ = this;
-            if (this._receBytes.length < fl.BasePack.HEAD_SIZE) {
+            if (this._receBytes.limit < fl.BasePack.HEAD_SIZE) {
                 return false;
             }
-            this._receBytes.position = 0;
-            var firstPackageLenght = this._receBytes.readUnsignedShort();
+            this._receBytes.offset = 0;
+            var firstPackageLenght = this._receBytes.readUint16();
             firstPackageLenght = firstPackageLenght + fl.BasePack.HEAD_SIZE;
-            if (this._receBytes.length < firstPackageLenght) {
+            if (this._receBytes.limit < firstPackageLenght) {
                 return false;
             }
             if (firstPackageLenght > 2 * fl.BasePack.MAX_PACK_SIZE) {
-                fl.logger.error("[BaseNet.processPacks] unknow package size: " + firstPackageLenght);
+                throw new Error("[BaseSocket.processPacks] unknow package size: " + firstPackageLenght);
             }
-            var tmpBytes = new egret.ByteArray();
-            tmpBytes.writeBytes(this._receBytes, 0, fl.BasePack.HEAD_SIZE);
-            var bodyBytes = new egret.ByteArray();
-            if (firstPackageLenght != fl.BasePack.HEAD_SIZE) {
-                bodyBytes.writeBytes(this._receBytes, fl.BasePack.HEAD_SIZE, firstPackageLenght - fl.BasePack.HEAD_SIZE);
+            var tmpBytes = this._receBytes.copy(0, fl.BasePack.HEAD_SIZE).flip();
+            var bodyBytes = new ByteBuffer().flip();
+            var n = firstPackageLenght - fl.BasePack.HEAD_SIZE;
+            if (n > 0) {
+                this._receBytes.copyTo(bodyBytes, 0, fl.BasePack.HEAD_SIZE, firstPackageLenght);
+                bodyBytes.offset = n;
+                bodyBytes.flip();
             }
-            tmpBytes.position = 2;
-            var protocolNumber = tmpBytes.readUnsignedInt();
+            tmpBytes.offset = 2;
+            var protocolNumber = tmpBytes.readUint32();
             if (protocolNumber >>> 31 == 1) {
-                fl.logger.info("compressed protocol: " + protocolNumber);
+                fl.logger("compressed protocol: " + protocolNumber);
                 protocolNumber = protocolNumber & 0x7FFFFFFF;
                 //decryption
                 bodyBytes = this.decryption(bodyBytes);
             }
-            tmpBytes.position = fl.BasePack.HEAD_SIZE;
-            if (bodyBytes.length) {
-                tmpBytes.writeBytes(bodyBytes, 0, bodyBytes.length);
-                tmpBytes.position = fl.BasePack.HEAD_SIZE;
+            tmpBytes.offset = fl.BasePack.HEAD_SIZE;
+            if (bodyBytes.limit) {
+                tmpBytes.mark();
+                tmpBytes.append(bodyBytes).flip();
+                tmpBytes.reset();
             }
             this.processOrCache(protocolNumber, tmpBytes);
             //reset left bytes
-            tmpBytes = new egret.ByteArray();
-            if (this._receBytes.length > firstPackageLenght) {
-                tmpBytes.writeBytes(this._receBytes, firstPackageLenght, this._receBytes.length - firstPackageLenght);
+            tmpBytes = new ByteBuffer().flip();
+            n = this._receBytes.limit - firstPackageLenght;
+            if (n > 0) {
+                this._receBytes.copyTo(tmpBytes, 0, firstPackageLenght, this._receBytes.limit);
+                tmpBytes.offset = n;
+                tmpBytes.flip();
             }
-            this._receBytes.length = 0;
-            this._receBytes.position = 0;
-            if (tmpBytes.length > 0) {
-                this._receBytes.writeBytes(tmpBytes, 0, tmpBytes.length);
+            this._receBytes.clear().flip();
+            if (tmpBytes.limit > 0) {
+                this._receBytes.append(tmpBytes).flip();
                 return true;
             }
             else {
@@ -769,12 +773,12 @@ var fl;
         };
         BaseNet.prototype.processCmd = function (protocol, data) {
             var tick = Date.now();
-            var action = fl.actionMgr.getAction(protocol);
+            var action = this.actionMgr.getAction(protocol);
             if (action) {
                 action.process(data, protocol);
             }
             else {
-                action = fl.actionMgr.getAction(fl.Protocol.getProtocolType(protocol));
+                action = this.actionMgr.getAction(fl.Protocol.getProtocolType(protocol));
                 if (action) {
                     action.process(data, protocol);
                 }
@@ -789,6 +793,7 @@ var fl;
         };
         BaseNet.EVENT_NET_ERR = "NetErrorEvent";
         BaseNet.EVENT_CLIENT_CLOSE = "NetClientCloseEvent";
+        BaseNet.ID = 0;
         return BaseNet;
     })();
     fl.BaseNet = BaseNet;
@@ -803,32 +808,39 @@ var fl;
             this.id = id;
         }
         BasePack.prototype.getBytes = function () {
-            var bytes = new egret.ByteArray();
-            bytes.position = 2;
-            bytes.writeUnsignedInt(this.id);
+            var bytes = new ByteBuffer().flip();
+            bytes.offset = 2;
+            bytes.writeUint32(this.id);
             this.toBytes(bytes);
-            bytes.position = 0;
-            this.size = bytes.length - fl.BasePack.HEAD_SIZE;
-            bytes.writeUnsignedShort(this.size);
+            bytes.flip();
+            this.size = bytes.limit - fl.BasePack.HEAD_SIZE;
+            bytes.writeUint16(this.size);
+            bytes.offset = 0;
             return bytes;
         };
         BasePack.prototype.toBytes = function (bytes) {
+            if (this.protoValue) {
+                BasePack.writeProtoModel(this.protoValue, bytes);
+            }
         };
         BasePack.prototype.writeBytes = function (bytes) {
             this.toBytes(bytes);
         };
         BasePack.prototype.setBytes = function (bytes) {
-            bytes.position = fl.BasePack.HEAD_SIZE;
+            bytes.offset = fl.BasePack.HEAD_SIZE;
             this.fromBytes(bytes);
             this.dealError(this.result);
         };
         BasePack.prototype.fromBytes = function (bytes) {
+            if (this.protoModel) {
+                this.protoValue = BasePack.readProtoModel(this.protoModel, bytes);
+            }
         };
         BasePack.prototype.readBytes = function (bytes) {
             this.fromBytes(bytes);
         };
         BasePack.prototype.resetBytesPos = function (bytes) {
-            bytes.position = fl.BasePack.HEAD_SIZE;
+            bytes.offset = fl.BasePack.HEAD_SIZE;
         };
         BasePack.prototype.dealError = function (err) {
             if (err != 0) {
@@ -836,9 +848,33 @@ var fl;
                 fl.logger.error("[BasePack.dealError] " + this.id + ":" + err);
             }
         };
+        BasePack.readProtoModel = function (m, bytes, length) {
+            if (length === void 0) { length = -1; }
+            var v;
+            if (length < 0) {
+                length = bytes.readUint32();
+            }
+            else if (length == 0) {
+                length = bytes.limit - bytes.offset;
+            }
+            var n = bytes.offset + length;
+            var tmpBytes = bytes.copy(bytes.offset, n).flip();
+            bytes.offset = n;
+            v = m.decode(tmpBytes.buffer);
+            return v;
+        };
+        BasePack.writeProtoModel = function (v, bytes) {
+            var tmpBytes = ByteBuffer.wrap(v.toArrayBuffer());
+            if (bytes) {
+                bytes.writeUint32(tmpBytes.limit);
+                bytes.append(tmpBytes);
+            }
+            return tmpBytes;
+        };
         BasePack.EVENT_PACK_ERR = "PackErrorEvent";
         BasePack.HEAD_SIZE = 6;
         BasePack.MAX_PACK_SIZE = 65536;
+        BasePack.BUFFER_SIZE = 1024;
         return BasePack;
     })();
     fl.BasePack = BasePack;
@@ -848,6 +884,10 @@ var fl;
     var NetManager = (function () {
         function NetManager() {
             this.netCache_ = new fl.Dictionary();
+            var __self__ = this;
+            fl.eventMgr.addEventListener(fl.BaseNet.EVENT_NET_ERR, function (id) {
+                __self__.removeNet(id);
+            });
         }
         NetManager.getInstance = function () {
             if (null == fl.NetManager.instance_) {
@@ -1117,6 +1157,7 @@ var fl;
             }
             return config;
         };
+        Injector.INJECTION_POINTS_CACHE = new fl.Dictionary(true);
         return Injector;
     })();
     fl.Injector = Injector;
@@ -1129,7 +1170,6 @@ var fl;
         return InjecteeDescription;
     })();
 })(fl || (fl = {}));
-fl.Injector.INJECTION_POINTS_CACHE = new fl.Dictionary(true);
 var fl;
 (function (fl) {
     var InjectorError = (function (_super) {
